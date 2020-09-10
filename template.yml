@@ -1,0 +1,293 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+- AWS::Serverless-2016-10-31
+- AWS::CodeStar
+
+Parameters:
+  ProjectId:
+    Type: String
+    Description: CodeStar projectId used to associate new resources to team members
+  CodeDeployRole:
+    Type: String
+    Description: IAM role to allow AWS CodeDeploy to manage deployment of AWS Lambda test_functions
+  Stage:
+    Type: String
+    Description: The name for a project pipeline stage, such as Staging or Prod, for which resources are provisioned and deployed.
+    Default: ''
+  XRayLayer:
+    Type: String
+    Description: The lambda layer containing the XRAY SDK
+    Default: 'arn:aws:lambda:eu-west-1:113088814899:layer:Klayers-python37-aws-xray-sdk:7'
+  HellaIngesterDynamoTableName:
+    Type: String
+    Description: Dynamo DB Table name to store Hella-Goodman calibration data
+    Default: Hella-Gutmann
+  HellDevicesDynamoTableName:
+    Type: String
+    Description: Dynamo DB Table name to store devices and country codes
+    Default: Hella-Devices
+
+
+
+Globals:
+  Function:
+    AutoPublishAlias: live
+    DeploymentPreference:
+      Enabled: true
+      Type: AllAtOnce
+      Role: !Ref CodeDeployRole
+
+Resources:
+  HellaAddCalibration:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: api.functions.hella.add_calibration.index.handler
+      Runtime: python3.7
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Events:
+        ModernAddCalibration:
+          Type: Api
+          Properties:
+            Path: /adas/diagnostics/hella
+            Method: post
+        LegacyAddCalibration:
+          Type: Api
+          Properties:
+            Path: /hellacapture
+            Method: post
+      Layers:
+        - !Ref XRayLayer
+  Hella-Gutmann-Table:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: : !Sub '${HellaIngesterDynamoTableName}-${Stage}'
+      AttributeDefinitions:
+        - AttributeDefinition: "hellavin"
+          AttributeType: "S"
+        - AttributeDefinition: "dimension"
+          AttributeType: "S"
+        - AttributeDefinition: "file_id"
+            AttributeType: "S"
+      KeySchema:
+        - AttributeName: "hellavin"
+          KeyType: "HASH"
+        - AttributeName: "dimension"
+          KeyType: "RANGE"
+      GlobalSecondaryIndexes:
+        - IndexName: "dimension-file_id-index"
+          KeySchema:
+            - AttributeName: "dimension"
+              KeyType: "HASH"
+            - AttributeName: "file_id"
+              KeyType: "RANGE"
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            ReadCapacityUnits: 25
+            WriteCapacityUnits: 5
+  Hella-Gutmann-Devices-Table:
+    Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: : !Sub '${HellDevicesDynamoTableName}-${Stage}'
+        AttributeDefinitions:
+          - AttributeDefinition: "hellavin"
+            AttributeType: "S"
+          - AttributeDefinition: "dimension"
+            AttributeType: "S"
+          - AttributeDefinition: "file_id"
+              AttributeType: "S"
+        KeySchema:
+          - AttributeName: "country"
+            KeyType: "HASH"
+          - AttributeName: "device_no"
+            KeyType: "RANGE"
+        GlobalSecondaryIndexes:
+          - IndexName: "device_no-index"
+            KeySchema:
+              - AttributeName: "device_no"
+                KeyType: "HASH"
+            Projection:
+              ProjectionType: "ALL"
+            ProvisionedThroughput:
+              ReadCapacityUnits: 5
+              WriteCapacityUnits: 5
+  BuildATBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "at-hella-calibrations"
+  BuildAUBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "au-hella-calibrations"
+  BuildBEBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "be-hella-calibrations"
+  BuildBRBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "br-hella-calibrations"
+  BuildCHBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "ch-hella-calibrations"
+  BuildDEBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "de-hella-calibrations"
+  BuildDKBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "dk-hella-calibrations"
+  BuildEEBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "ee-hella-calibrations"
+  BuildESBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "es-hella-calibrations"
+  BuildFIBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "fi-hella-calibrations"
+  BuildGBBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "gb-hella-calibrations"
+  BuildGRBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "gr-hella-calibrations"
+  BuildHUBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "hu-hella-calibrations"
+  BuildIEBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "ie-hella-calibrations"
+  BuildITBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "it-hella-calibrations"
+  BuildMABucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "ma-hella-calibrations"
+  BuildNLBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "nl-hella-calibrations"
+  BuildNOBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "no-hella-calibrations"
+  BuildNZBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "nz-hella-calibrations"
+  BuildPTBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "pt-hella-calibrations"
+  BuildRUBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "ru-hella-calibrations"
+  BuildSEBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "se-hella-calibrations"
+  BuildSIBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "si-hella-calibrations"
+  BuildTRBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "tr-hella-calibrations"
+  BuildBelronCopyBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "hella-gutmann-belron-copy"
+  BuildFailedValidationBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "hella-gutmann-failed-validation"
+  BuildUnreconciledBucket:
+    Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "hella-gutmann-unreconciled-by-country"
+  HellaGetCalibration:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: api.functions.hella.get_calibration.index.handler
+      Runtime: python3.7
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      Events:
+        ModernGetCalibration:
+          Type: Api
+          Properties:
+            Path: /adas/diagnostics/hella
+            Method: get
+        LegacyGetCalibration:
+          Type: Api
+          Properties:
+            Path: /hellacapture/files
+            Method: get
+  HellaHealthCheck:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: api.functions.hella.health_check.index.handler
+      Runtime: python3.7
+      Role:
+        Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+      Events:
+        ModernHealthCheck:
+          Type: Api
+          Properties:
+            Path: /adas/diagnostics/hella/status
+            Method: get
+        ModernStatusHealthCheck:
+          Type: Api
+          Properties:
+            Path: /api/status
+            Method: get
+        LegacyHealthCheck:
+          Type: Api
+          Properties:
+            Path: /hellacapture/healthcheck
+            Method: get
+        LegacyStatusHealthCheck:
+          Type: Api
+          Properties:
+            Path: /healthcheck
+            Method: get
+  LambdaExecutionRole:
+    Description: Creating service role in IAM for AWS Lambda
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'CodeStar-${ProjectId}-Execution${Stage}'
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: [lambda.amazonaws.com]
+          Action: sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      PermissionsBoundary: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/CodeStar_${ProjectId}_PermissionsBoundary'
+
+
+
+
