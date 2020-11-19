@@ -91,15 +91,10 @@ class Xml_Hella_gutmann(Base):
 
     def __prepare_record_write_list(self):
         if self.confirm_record_not_saved():
-            print("1")
             self.__write_device_data()
-            print("2")
             self.__write_car_data()
-            print("3")
             self.__write_fele_common_data()
-            print("4")
             self.__write_felg_parameter()
-            print("5")
             self.__write_result()
 
     def __write_device_data(self):

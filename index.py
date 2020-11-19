@@ -39,7 +39,6 @@ def handler(event, context):
                     file_id = response['file_id']
                     s3_link = {'bucket_name': bucket_name, 'file_id': file_id}
                     xml_hella_gutmann = Xml_Hella_gutmann(doc, s3_link, country_code)
-                    print("get_ok_to_go {}".format(xml_hella_gutmann.get_ok_to_go()))
                     if xml_hella_gutmann.get_ok_to_go():
                         records_to_write = xml_hella_gutmann.get_records_list()
                         dynamo_db = DynamoDB(records_to_write, "Hella-Gutmann")
